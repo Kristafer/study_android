@@ -8,7 +8,7 @@ namespace Lab1
 {
     public class KDistance
     {
-        public int Klaster { get; set; }
+        public Kernel Kernel { get; set; }
 
         public double Distance { get; set; }
     }

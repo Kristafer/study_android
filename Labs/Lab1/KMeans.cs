@@ -15,6 +15,7 @@ namespace Lab1
         private const int MAX_KLASTER_COUNT = 256;
         private const int DEFAULT_KLASTER = 0;
         private const int INDENT = 10;
+        private Object lockObject = new Object();
 
         private int kpoints_count, k_count, xWidth, yHeight = 0;
         private Color[] colors;
@@ -35,18 +36,19 @@ namespace Lab1
             xWidth = width;
             yHeight = height;
             colors = new Color[k_count];
-            OldKernels = NewKernels = new Kernel[k_count];
+            OldKernels = new Kernel[k_count];
+            NewKernels = new Kernel[k_count];
             kPoints = new KPoint[kpoints_count];
 
             for (var i = 0; i < kpoints_count; i++)
             {
                 kPoints[i] = new KPoint();
-                kPoints[i].X = INDENT+  rand.Next(xWidth - 2* INDENT);
-                kPoints[i].Y = INDENT+ rand.Next(yHeight- 2* INDENT);
+                kPoints[i].X = INDENT + rand.Next(xWidth - 2 * INDENT);
+                kPoints[i].Y = INDENT + rand.Next(yHeight - 2 * INDENT);
                 kPoints[i].Klaster = DEFAULT_KLASTER;
             }
 
-            for (var i= 0; i < k_count; i++)
+            for (var i = 0; i < k_count; i++)
             {
                 colors[i] = NewColor();
                 OldKernels[i] = NewKernels[i] = new Kernel();
@@ -62,6 +64,94 @@ namespace Lab1
         {
             bufferedGraphics.Graphics.Clear(Color.Black);
             bufferedGraphics.Render();
+        }
+
+        public void KmeansDo()
+        {
+            bool isKlasterChanged = true;
+
+            while (isKlasterChanged)
+            {
+                isKlasterChanged = false;
+                Dictionary<Kernel, List<KPoint>> kernelPoints = new Dictionary<Kernel, List<KPoint>>();
+                for (var i = 0; i < k_count; i++)
+                {
+                    OldKernels[i] = (Kernel)NewKernels[i].Clone();
+                    kernelPoints.Add(NewKernels[i], new List<KPoint>());
+                }
+
+                Parallel.ForEach(kPoints,
+                new ParallelOptions() { MaxDegreeOfParallelism = kPoints.Count() },
+                (kPoint) =>
+                {
+                    KDistance[] kDistances = new KDistance[k_count];
+                    KDistance Kmin = null;
+
+                    int count = 0;
+                    foreach (var kernel in kernelPoints.Keys)
+                    {
+                        kDistances[count] = new KDistance();
+                        kDistances[count].Kernel = kernel;
+                        kDistances[count].Distance = EvklidDistance(kPoint, NewKernels[count].KPoint);
+
+                        if (Kmin == null)
+                        {
+                            Kmin = kDistances[count];
+                        }
+                        else if (Kmin.Distance > kDistances[count].Distance)
+                        {
+                            Kmin = kDistances[count];
+                        }
+                        count++;
+                    }
+
+
+                    kPoint.Klaster = Kmin.Kernel.Klaster;
+                    lock (lockObject)
+                    {
+                        kernelPoints[Kmin.Kernel].Add(kPoint);
+                    }
+                });
+
+                Parallel.ForEach(kernelPoints.Keys,
+                new ParallelOptions() { MaxDegreeOfParallelism = kernelPoints.Keys.Count() },
+                (kernel) =>
+                {
+                    int kpointNumber = -1;
+                    double minAvrgDistance = int.MaxValue;
+                    var listPoints = kernelPoints[kernel];
+                    for (var i = 0; i < listPoints.Count(); i++)
+                    {
+                        double sumSquareDistance = 0, avrgDistances;
+                        for (var j = 0; j < listPoints.Count(); j++)
+                        {
+                            sumSquareDistance += Math.Pow(EvklidDistance(listPoints[i], listPoints[j]), 2);
+                        }
+                        avrgDistances = Math.Sqrt(sumSquareDistance);
+                        if (avrgDistances < minAvrgDistance)
+                        {
+                            minAvrgDistance = avrgDistances;
+                            kpointNumber = i;
+                        }
+                    }
+
+                    if (kpointNumber != -1)
+                    {
+                        NewKernels[kernel.Klaster].KPoint = listPoints[kpointNumber];
+                    }
+                });
+
+                for (int i = 0; i < k_count; i++)
+                {
+                    if (!OldKernels[i].Equals(NewKernels[i]))
+                    {
+                        isKlasterChanged = true;
+                        break;
+                    }
+                }
+
+                Draw();
+            }
         }
 
         private void Draw()
@@ -87,5 +177,9 @@ namespace Lab1
             return Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
         }
 
+        private double EvklidDistance(KPoint a, KPoint b)
+        {
+            return Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+        }
     }
 }

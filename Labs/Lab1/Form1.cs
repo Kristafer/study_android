@@ -38,5 +38,10 @@ namespace Lab1
             kMeans.ClearBox();
             isSetValue = false;
         }
+
+        private void kmeans_Click(object sender, EventArgs e)
+        {
+            kMeans.KmeansDo();
+        }
     }
 }

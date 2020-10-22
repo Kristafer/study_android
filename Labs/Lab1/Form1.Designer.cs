@@ -98,6 +98,7 @@
             this.kmeans.TabIndex = 6;
             this.kmeans.Text = "К-средних";
             this.kmeans.UseVisualStyleBackColor = true;
+            this.kmeans.Click += new System.EventHandler(this.kmeans_Click);
             // 
             // clear
             // 
