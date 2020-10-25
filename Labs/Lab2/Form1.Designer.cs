@@ -105,7 +105,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox1);
             this.Name = "Form1";
-            this.Text = "Lab1_kmeans_Piskarev";
+            this.Text = "Lab2_maximin_Piskarev";
             ((System.ComponentModel.ISupportInitialize)(this.displayBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
