@@ -14,6 +14,8 @@ namespace lab6
     {
         private readonly Algorithm algorithm;
         private readonly Random rand;
+
+        private  double[,] data;
         public Form1()
         {
             InitializeComponent();
@@ -26,7 +28,7 @@ namespace lab6
             int count = int.Parse(textBox1.Text);
             dataGridView.ColumnCount = count + 1;
             dataGridView.RowCount = count + 1;
-            var data = new double[count, count];
+            data = new double[count, count];
 
             for (int i = 1; i <= count; i++)
             {
@@ -38,16 +40,48 @@ namespace lab6
             {
                 for (int j = 0; j < count; j++)
                 {
-                    data[i, j] = i==j? 0: Math.Round(rand.NextDouble()*10+1,1);
+                    if (i <= j)
+                    {
 
-                    dataGridView[i+1, j+1].Value = data[i, j];
+                        data[i, j] = data[j,i] = i == j ? 0 : Math.Round(rand.NextDouble() * 10 + 1, 1);
+
+                        dataGridView[i + 1, j + 1].Value  = dataGridView[j + 1, i + 1].Value = data[i, j];
+                    }
                 }
             }
-
-            algorithm.SetData(count, data);
         }
 
         private void button2_Click(object sender, EventArgs e)
+        {
+            int count = int.Parse(textBox1.Text);
+            var newData = new double[count, count];
+            if (radioButton2.Checked)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    for (int j = 0; j < count; j++)
+                    {
+                        if (i <= j)
+                        {
+                            newData[i, j] = newData[j, i] =1.0/data[i,j];
+
+                        }
+                    }
+
+                    algorithm.SetData(count, newData);
+               
+                }
+            }
+            else
+            {
+                algorithm.SetData(count, data);
+            }
+            algorithm.Do(radioButton2.Checked);
+
+            algorithm.Draw(chart1);
+        }
+
+        private void chart1_Click(object sender, EventArgs e)
         {
 
         }

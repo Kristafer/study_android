@@ -8,13 +8,19 @@ namespace lab6
 {
     public class HPoint
     {
-        public int X { get; set; }
-        public int Y { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
 
-        public HPoint(int x, int y)
+        public HPoint(double x, double y)
         {
             X = x;
             Y = y;
+        }
+
+        public HPoint()
+        {
+            X = 0;
+            Y = 0;
         }
     }
 }
